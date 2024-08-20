@@ -1,17 +1,5 @@
-Forgotten Cave
-Lightning Bolt
-Monastery Swiftspear
-Chain Lightning
-Lava Spike
-Searing Blaze
-Skewer the Critics
-Fireblast
-Lava Dart
-Reckless Impulse
-Kessig Flamebreather
-Wrenn's Resolve
-Smash to Smithereens
-Red Elemental Blast
-Fireblast
-Raze
-End the Festivities
+4 Forgotten Cave
+4 Lightning Bolt
+4 Monastery Swiftspear
+4 Chain Lightning
+4 Lava Spike

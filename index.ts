@@ -4,6 +4,7 @@ import cliProgress from "cli-progress";
 import { $ } from "bun";
 
 let browser: Browser;
+let multiBar: cliProgress.MultiBar;
 
 // Function to search for a product and find the cheapest in-stock option
 async function findCheapestProduct(card: string) {
@@ -20,7 +21,7 @@ async function findCheapestProduct(card: string) {
 
     if (searchResults.length === 0) {
       await browser.close();
-      console.error(`Card not found: ${card}`);
+      multiBar.log(`\nCard not found: ${card}\n`);
       return { card, url: "Card not found.", price: "" };
     }
 
@@ -52,7 +53,8 @@ async function findCheapestProduct(card: string) {
     }
 
     if (!cheapestProduct) {
-      console.error(`Card out of stock: ${card}`);
+      multiBar.log(`Card out of stock: ${card}\n`);
+      await Bun.sleep(1000);
     } else {
       await $`open ${cheapestProduct.url}`;
     }
@@ -64,7 +66,10 @@ async function findCheapestProduct(card: string) {
 }
 
 async function main() {
-  const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+  multiBar = new cliProgress.MultiBar(
+    { format: " {bar} | {card} | {value}/{total}", clearOnComplete: true },
+    cliProgress.Presets.shades_classic
+  );
 
   browser = await puppeteer.launch();
 
@@ -73,19 +78,26 @@ async function main() {
   const deckList = deckListText
     .split("\n")
     .map((l) => l.trim())
+    .map((l) => l.replace(/^\d+\s*x?\s*/g, ""))
     .filter(Boolean);
 
-  progressBar.start(deckList.length, 0);
+  const progressBar = multiBar.create(deckList.length, 0);
 
   const results = [];
   for (const [index, card] of deckList.entries()) {
+    progressBar.update(index + 1, { card });
     results.push(await findCheapestProduct(card));
-    progressBar.update(index + 1);
   }
-  progressBar.stop();
+  multiBar.stop();
 
   const columns = ["url", "price"];
-  console.log(stringify(results, { columns }));
+  const sortedResults = results.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+  const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD',});
+  const totalPrice = sortedResults.reduce((acc, r) => acc + parseFloat(r.price || "0"), 0);
+  
+  console.error(`Total price of in stock cards: ${formatter.format(totalPrice)}`);
+
+  console.log(stringify(sortedResults, { columns }));
 
   await browser.close();
 }
