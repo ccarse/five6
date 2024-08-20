@@ -61,7 +61,16 @@ async function findCheapestProduct(card: string) {
       multiBar.log(`Card out of stock: ${card}\n`);
       await Bun.sleep(1000);
     } else {
-      await $`open ${cheapestProduct.url}`;
+      if (process.platform === "darwin") {
+        // macOS
+        await $`open ${cheapestProduct.url}`;
+      } else if (process.platform === "win32") {
+        // Windows
+        await $`start ${cheapestProduct.url}`;
+      } else {
+        console.log("Unsupported OS");
+      }
+      
     }
 
     return cheapestProduct || { card, url: "Not in stock", price: "" };
