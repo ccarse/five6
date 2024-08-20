@@ -43,12 +43,17 @@ async function findCheapestProduct(card: string) {
       });
 
       if (price !== null && price < lowestPrice) {
-        lowestPrice = price;
-        cheapestProduct = {
-          card,
-          url: productUrl,
-          price: `${lowestPrice}`,
-        };
+        const title = product.title.split("[")[0].trim().toLowerCase();
+        // Skip products that don't match the card name
+        if (title === card.toLowerCase()) {
+          lowestPrice = price;
+          cheapestProduct = {
+            title: product.title,
+            card,
+            url: productUrl,
+            price: `${lowestPrice}`,
+          };
+        }
       }
     }
 
@@ -92,9 +97,9 @@ async function main() {
 
   const columns = ["url", "price"];
   const sortedResults = results.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-  const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD',});
+  const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
   const totalPrice = sortedResults.reduce((acc, r) => acc + parseFloat(r.price || "0"), 0);
-  
+
   console.error(`Total price of in stock cards: ${formatter.format(totalPrice)}`);
 
   console.log(stringify(sortedResults, { columns }));
